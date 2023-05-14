@@ -1,0 +1,3 @@
+## listenfd/connfd LT/ET BLOCK/NONBLOCK测试
+- 可执行文件：epoll_listenfd_LT_NONBLOCK_connfd_LT_BLOCK
+    - 监听描述符为水平非阻塞模式，连接描述符为水平阻塞模式
