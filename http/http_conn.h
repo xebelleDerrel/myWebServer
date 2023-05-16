@@ -1,7 +1,7 @@
 #ifndef HTTP_CONN_H
 #define HTTP_CONN_H
 #include <unistd.h>
-
+#include <signal.h>
 #include <sys/types.h>
 #include <sys/epoll.h>
 #include <fcntl.h>
