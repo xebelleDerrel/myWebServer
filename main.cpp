@@ -71,6 +71,7 @@ void addsig(int sig, void(handler)(int), bool restart = true)
 // 定时处理任务，重新定时不断触发SIGALARM信号
 void timer_handler()
 {
+    printf("开始定时检查定时器队列是否有超时的定时器！\n");
     timer_list.tick();
     alarm(TIMESLOT);
 }
@@ -229,7 +230,9 @@ int main(int argc, char *argv[])
 
                 time_t cur = time(NULL);
                 // 设置绝对超时时间
+                
                 timer->expire = cur + 3 * TIMESLOT;
+                printf("客户端#%d定时器初始化，到期时间为%s\n", sockfd, asctime(localtime(&timer->expire)));
                 // 创建该连接对应的定时器，初始化为前述临时变量
                 users_timer[connfd].timer = timer;
                 // 将该定时器添加到链表中
@@ -348,8 +351,11 @@ int main(int argc, char *argv[])
                 util_timer *timer = users_timer[sockfd].timer;
                 if (users[sockfd].write())
                 {
+                    
                     // 若有新的数据传输，则将定时器往后延迟3个单位
                     // 并对新的定时器在链表上的位置进行调整
+
+                    printf("写入成功\n");
                     if (timer)
                     {
                         time_t cur = time(NULL);
