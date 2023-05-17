@@ -71,7 +71,8 @@ void addsig(int sig, void(handler)(int), bool restart = true)
 // 定时处理任务，重新定时不断触发SIGALARM信号
 void timer_handler()
 {
-
+    timer_list.tick();
+    alarm(TIMESLOT);
 }
 
 
@@ -220,6 +221,19 @@ int main(int argc, char *argv[])
                 users_timer[connfd].sockfd = connfd;
 
                 // 创建定时器临时变量
+                util_timer *timer = new util_timer;
+                // 设置定时器对应的连接资源
+                timer->user_data = &users_timer[connfd];
+                // 设置回调函数
+                timer->cb_func = cb_func;
+
+                time_t cur = time(NULL);
+                // 设置绝对超时时间
+                timer->expire = cur + 3 * TIMESLOT;
+                // 创建该连接对应的定时器，初始化为前述临时变量
+                users_timer[connfd].timer = timer;
+                // 将该定时器添加到链表中
+                timer_list.add_timer(timer);
                 
 #endif
 
@@ -239,9 +253,14 @@ int main(int argc, char *argv[])
                 // EPOLLHUP     ： EPOLLHUP 表示读写都关闭，表示对应的文件描述符被挂断；
                 // EPOLLERR     ： 表示对应的文件描述符发生错误；
 
-                /*
-                    定时器相关的处理
-                */
+                // 服务器端关闭连接，移除对应的定时器
+                cb_func(&users_timer[sockfd]);
+
+                util_timer *timer = users_timer[sockfd].timer;
+                if (timer)
+                {
+                    timer_list.del_timer(timer); 
+                }
             }
 
             // 处理信号
@@ -291,33 +310,72 @@ int main(int argc, char *argv[])
             // 处理客户端上接收到的数据
             else if (events[i].events & EPOLLIN)
             {
-                printf("客户端发来消息:\n");
+                // 创建定时器临时变量，将该连接对应的定时器取出来
+                util_timer *timer = users_timer[sockfd].timer;
+            
                 // 将收到的数据读入http对象的缓冲区
                 if (users[sockfd].read_once())
                 {
                     // 打印处理数据的日志
-                    // users[sockfd].print_read_buf();
+                    
+                    // 若检测到读事件，将该事件放入请求队列
                     pool->append(&users[sockfd]);
+
+                    // 若有数据传输，则将定时器往后延迟3个单位
+                    // 对其在链表上的位置进行调整
+                    if (timer)
+                    {
+                        time_t cur = time(NULL);
+                        timer->expire = cur + 3 * TIMESLOT;
+                        timer_list.adjust_timer(timer);
+                    }
                 } 
                 else
                 {
-
+                    // 服务器端关闭连接，移除对应的定时器
+                    cb_func(&users_timer[sockfd]);
+                    if (timer)
+                    {
+                        timer_list.del_timer(timer);
+                    }
                 }
             }
             // 处理客户端上的读事件
             else if (events[i].events & EPOLLOUT)
             {
                 printf("处理写事件\n");
+
+                util_timer *timer = users_timer[sockfd].timer;
                 if (users[sockfd].write())
                 {
-                    
+                    // 若有新的数据传输，则将定时器往后延迟3个单位
+                    // 并对新的定时器在链表上的位置进行调整
+                    if (timer)
+                    {
+                        time_t cur = time(NULL);
+                        timer->expire = cur + 3 * TIMESLOT;
+                        timer_list.adjust_timer(timer);
+                    }
                 }
                 else 
                 {
-
+                    // 服务器端关闭连接，移除对应的定时器
+                    cb_func(&users_timer[sockfd]);
+                    if (timer)
+                    {
+                        timer_list.del_timer(timer);
+                    }
                 }
             }
 
+        }
+
+        // 处理定时器并非必须事件，收到信号并不是立马处理
+        // 完成读写事件后，再进行处理
+        if (timeout)
+        {
+            timer_handler();
+            timeout = false;
         } 
     }
 

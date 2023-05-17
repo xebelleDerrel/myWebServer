@@ -28,7 +28,7 @@ public:
 public:
   // 超时时间
   time_t expire;
-  // 回调函数
+  // 回调函数，函数指针
   void (*cb_func)(client_data *);
   // 连接资源
   client_data *user_data;
@@ -112,7 +112,41 @@ public:
         add_timer(timer, timer->next);
       }
     }
+  // 定时任务处理函数
+  void tick()
+  {
+    if (!head)
+    {
+      return;
+    }
 
+    // 获取当前时间
+    time_t cur = time(NULL);
+    util_timer *tmp = head;
+
+    // 遍历定时器链表
+    while (tmp)
+    {
+      // 链表为升序链表
+      // 当时间小于定时器超时时间，后面的定时器也没到期
+      if (cur < tmp->expire)
+      {
+        break;
+      }
+      // 当定时器到期，则调用回调函数，执行定时事件
+      tmp->cb_func(tmp->user_data);
+
+      // 将处理后的定时器从链表容器中删除，并重置头结点
+      head = tmp->next;
+      if (head)
+      {
+        head->prev = NULL;
+      }
+      delete tmp;
+      tmp = head;
+    }
+  }
+  
     // 删除定时器
     void del_timer(util_timer *timer)
     {
@@ -187,40 +221,7 @@ private:
     }
   }
 
-  // 定时任务处理函数
-  void tick()
-  {
-    if (!head)
-    {
-      return;
-    }
 
-    // 获取当前时间
-    time_t cur = time(NULL);
-    util_timer *tmp = head;
-
-    // 遍历定时器链表
-    while (tmp)
-    {
-      // 链表为升序链表
-      // 当时间小于定时器超时时间，后面的定时器也没到期
-      if (cur < tmp->expire)
-      {
-        break;
-      }
-      // 当定时器到期，则调用回调函数，执行定时事件
-      tmp->cb_func(tmp->user_data);
-
-      // 将处理后的定时器从链表容器中删除，并重置头结点
-      head = tmp->next;
-      if (head)
-      {
-        head->prev = NULL;
-      }
-      delete tmp;
-      tmp = head;
-    }
-  }
 
 private:
   // 头尾节点
