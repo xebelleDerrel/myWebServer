@@ -115,7 +115,7 @@ void threadpool<T>::run()
         }
         
         T *request = m_workqueue.front();
-        printf("取到一个任务，其sockfd为%d\n", request->get_sockfd()); 
+        // printf("取到一个任务，其sockfd为%d\n", request->get_sockfd()); 
         m_workqueue.pop_front();
         m_queuelocker.unlock();
         if (!request) 
@@ -124,7 +124,7 @@ void threadpool<T>::run()
             
         }
 
-        printf("开始处理任务\n");
+        // printf("开始处理任务\n");
         request->process();
     }
 }

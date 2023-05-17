@@ -72,6 +72,8 @@ void addsig(int sig, void(handler)(int), bool restart = true)
 void timer_handler()
 {
     printf("开始定时检查定时器队列是否有超时的定时器！\n");
+    // printf("定时器当前状态：\n");
+    // timer_list.print_timer();
     timer_list.tick();
     alarm(TIMESLOT);
 }
@@ -346,7 +348,7 @@ int main(int argc, char *argv[])
             // 处理客户端上的读事件
             else if (events[i].events & EPOLLOUT)
             {
-                printf("处理写事件\n");
+                // printf("处理写事件\n");
 
                 util_timer *timer = users_timer[sockfd].timer;
                 if (users[sockfd].write())
@@ -355,7 +357,7 @@ int main(int argc, char *argv[])
                     // 若有新的数据传输，则将定时器往后延迟3个单位
                     // 并对新的定时器在链表上的位置进行调整
 
-                    printf("写入成功\n");
+                    // printf("写入成功\n");
                     if (timer)
                     {
                         time_t cur = time(NULL);

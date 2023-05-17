@@ -125,6 +125,7 @@ public:
     util_timer *tmp = head;
 
     // 遍历定时器链表
+    int cnt = 0;
     while (tmp)
     {
       // 链表为升序链表
@@ -144,7 +145,9 @@ public:
       }
       delete tmp;
       tmp = head;
+      cnt++;
     }
+    
   }
   
     // 删除定时器
@@ -187,7 +190,20 @@ public:
       timer->next->prev = timer->prev;
       delete timer;
     }
-  
+
+    // 打印链表
+    void print_timer()
+    {
+      if (!head) 
+        return;
+      util_timer *cur_timer = head;
+      int cnt = 1;
+      while (cur_timer) 
+      {
+        printf("\t第%d个定时器将于< %s > 到期\n", cnt++, asctime(localtime(&cur_timer->expire)));
+        cur_timer = cur_timer->next;
+      }
+    }
 private:
   // 私有成员，被公有成员add_timer和adjust_time调用
   // 主要用于调整链表内部节点

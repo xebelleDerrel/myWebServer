@@ -20,7 +20,7 @@ const char *error_500_title = "Internal Error";
 const char *error_500_form = "There was an unusual problem serving the request file.\n";
 
 //网站根目录，文件夹内存放请求的资源和跳转的html文件
-const char* doc_root="/home/wxd/Desktop/webserver/myWebServer/root";
+const char* doc_root="/home/wxd/桌面/webserver/myWebServer/root";
 
 
 
@@ -200,15 +200,15 @@ http_conn::HTTP_CODE http_conn::process_read()
     HTTP_CODE ret = NO_REQUEST;
     char *text = 0;
 
-    printf("开始解析报文, 此时状态机的状态为%d\n", m_check_state);
-    printf("%s\n", m_read_buf);
+    // printf("开始解析报文, 此时状态机的状态为%d\n", m_check_state);
+    // printf("%s\n", m_read_buf);
     // 条件1：对于POST请求报文，消息体末尾没有任何字符，所以不能使用从状态机的状态，这里转而用主状态机的状态作为循环入口条件
 
     while ((m_check_state == CHECK_STATE_CONTENT && line_status == LINE_OK) || ((line_status = parse_line()) == LINE_OK))
     {
         
         text = get_line();
-        printf("读取到完整一行:%s\n", text);
+        // printf("读取到完整一行:%s\n", text);
         // printf("读取到完整一行\n");
         
         m_start_line = m_checked_idx;
@@ -216,7 +216,7 @@ http_conn::HTTP_CODE http_conn::process_read()
         {
         case CHECK_STATE_REQUESTLINE:
         {
-            printf("\t开始解析请求行\n");
+            // printf("\t开始解析请求行\n");
             ret = parse_request_line(text);
             // printf("解析结束\n");
             if (ret == BAD_REQUEST)
@@ -225,7 +225,7 @@ http_conn::HTTP_CODE http_conn::process_read()
         }
         case CHECK_STATE_HEADER:
         {
-            printf("\t开始解析请求头\n");
+            // printf("\t开始解析请求头\n");
             ret = parse_headers(text);
             if (ret == BAD_REQUEST)
                 return BAD_REQUEST;
@@ -251,7 +251,7 @@ http_conn::HTTP_CODE http_conn::process_read()
         }
     }
 
-    printf("读取完毕\n");
+    // printf("读取完毕\n");
     return NO_REQUEST;
 }
 
@@ -260,7 +260,7 @@ http_conn::HTTP_CODE http_conn::parse_request_line(char *text)
 {
     // 在HTTP报文中，请求行说明请求类型，要访问的资源以及所使用的HTTP版本，其中各个部分之间通过\t或空格分隔
     // 请求行中最先含有空格和\t任意字符的位置返回
-    printf("%s\n", text);
+    // printf("%s\n", text);
     m_url = strpbrk(text, " \t");
 
     // 如果没有空格或者\t，则报文格式有误
@@ -273,7 +273,7 @@ http_conn::HTTP_CODE http_conn::parse_request_line(char *text)
 
     // 取出数据，并通过与GET和POST比较，以确定请求方式
     char *method = text;
-    printf("method = %s\n", method);
+    // printf("method = %s\n", method);
     if (strcasecmp(method, "GET") == 0) 
     {
         m_method = GET;
@@ -301,8 +301,8 @@ http_conn::HTTP_CODE http_conn::parse_request_line(char *text)
     }
     *m_version++ = '\0';
     m_version += strspn(m_version, " \t");
-    printf("url = %s\n", m_url);
-    printf("version = %s\n", m_version);
+    // printf("url = %s\n", m_url);
+    // printf("version = %s\n", m_version);
     // 仅支持HTTP/1.1
     if (strcasecmp(m_version, "HTTP/1.1") != 0)
     {
@@ -380,11 +380,11 @@ http_conn::HTTP_CODE http_conn::parse_headers(char *text)
         text += 5;
         text += strspn(text, " \t");
         m_host = text;
-        printf("host : %s\n", m_host);
+        // printf("host : %s\n", m_host);
     }
     else
     {
-        printf("oop!unkown header: %s\n", text);
+        // printf("oop!unkown header: %s\n", text);
     }
 
     return NO_REQUEST;
@@ -408,16 +408,16 @@ http_conn::HTTP_CODE http_conn::parse_content(char *text)
 // 生成响应报文
 http_conn::HTTP_CODE http_conn::do_request()
 {
-    printf("开始生成请求报文\n");
+    // printf("开始生成请求报文\n");
     // 将初始化的m_real_file赋值为网站根目录
     strcpy(m_real_file, doc_root);
-    printf("m_real_file : %s\n", m_real_file);
+    // printf("m_real_file : %s\n", m_real_file);
     int len = strlen(m_real_file);
 
     // 找到m_url中/的位置
-    printf("m_url : %s\n", m_url);
+    // printf("m_url : %s\n", m_url);
     const char *p = strchr(m_url, '/');
-    printf("p : %s\n", p);
+    // printf("p : %s\n", p);
     // 实现登录和注册校验
     if (cgi == 1 && (*(p + 1) == '2' || *(p + 1) == '3'))
     {
@@ -638,12 +638,12 @@ bool http_conn::process_write(HTTP_CODE ret)
     // 文件存在，200
     case FILE_REQUEST:
     {
-        printf("文件存在！！\n");
+        // printf("文件存在！！\n");
         add_status_line(200, ok_200_title);
         // 如果请求的资源存在
         if (m_file_stat.st_size != 0)
         {
-            printf("请求资源大小大于0\n");
+            // printf("请求资源大小大于0\n");
             add_headers(m_file_stat.st_size);
             // 第一个iovec指针指向响应报文缓冲区，长度指向m_write_idx
             m_iv[0].iov_base = m_write_buf;
